@@ -1,0 +1,29 @@
+{
+  "name": "debezium-postgres-products",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "shop",
+    "database.password": "shop",
+    "database.dbname": "shop",
+    "database.server.name": "shop",
+
+    "slot.name": "shop_products_slot",
+    "plugin.name": "pgoutput",
+
+    "table.include.list": "public.products",
+
+    "snapshot.mode": "initial",
+
+    "transforms": "unwrap,renameTopic",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.add.fields": "op,ts_ms",
+
+    "transforms.renameTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.renameTopic.regex": "shop\\.public\\.products",
+    "transforms.renameTopic.replacement": "products"
+  }
+}

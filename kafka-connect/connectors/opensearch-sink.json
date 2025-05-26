@@ -1,0 +1,19 @@
+{
+  "name": "opensearch-products",
+  "config": {
+    "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+    "topics": "products",
+    "connection.url": "http://opensearch:9200",
+    "index": "products",
+    "key.ignore": "true",
+    "schema.ignore": "true",
+    "behavior.on.null.values": "delete",
+
+    "transforms": "filterFields",
+    "transforms.filterFields.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+    "transforms.filterFields.fields": "id,name,description",
+
+    "errors.tolerance": "all",
+    "errors.log.enable": "true"
+  }
+}
