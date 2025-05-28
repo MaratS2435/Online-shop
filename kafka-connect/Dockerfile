@@ -3,9 +3,7 @@ FROM confluentinc/cp-kafka-connect:7.8.0
 
 # --------------------------------------------------------------------
 # 1. ClickHouse JDBC
-RUN mkdir -p /usr/share/java/clickhouse \
- &&  curl -L -o /usr/share/java/clickhouse/clickhouse-jdbc.jar \
-     https://repo1.maven.org/maven2/com/clickhouse/clickhouse-jdbc/0.6.0/clickhouse-jdbc-0.6.0-all.jar
+RUN confluent-hub install --no-prompt clickhouse/clickhouse-kafka-connect:latest
 
 # --------------------------------------------------------------------
 # 2. Debezium ⟶ больше никакой Java-11 ошибки
@@ -23,6 +21,10 @@ RUN microdnf install -y unzip curl && microdnf clean all \
       /usr/share/confluent-hub-components/opensearch-connector/ \
  && rm -rf /tmp/opensearch /tmp/opensearch.zip
 USER appuser
+
+RUN confluent-hub install --no-prompt confluentinc/connect-transforms:latest
+RUN confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
+
 
 # где лежат плагины
 ENV CONNECT_PLUGIN_PATH="/usr/share/confluent-hub-components:/usr/share/confluent-hub-components/opensearch-connector"

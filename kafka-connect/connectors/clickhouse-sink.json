@@ -1,14 +1,21 @@
 {
-  "name": "clickhouse-activity",
+  "name": "clickhouse-user-actions",
   "config": {
-    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-    "topics": "activity-agg",
-    "connection.url": "jdbc:clickhouse://clickhouse:8123",
-    "insert.mode": "insert",
-    "auto.create": "true",
-    "auto.evolve": "true",
-    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "connector.class": "com.clickhouse.kafka.connect.ClickHouseSinkConnector",
+    "tasks.max": "1",
+    "topics": "user-actions",
+    "hostname": "clickhouse",
+    "port": "8123",
+    "database": "default",
+    "topic2TableMap": "user-actions:user_events",
+
+    "key.converter":   "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable":   "false",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "value.converter.schemas.enable": "false"
+    "value.converter.schemas.enable": "false",
+
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "exactlyOnce": "false"
   }
 }

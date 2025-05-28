@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from opensearchpy import OpenSearch
+from app.config import Settings
 import os
 
-DATABASE_URL = os.getenv("DB_URL", "postgresql+asyncpg://shop:shop@localhost:5432/shop")
+DATABASE_URL = Settings.POSTGRES_URL
 
 engine = create_async_engine(DATABASE_URL, pool_size=10, max_overflow=20, future=True)
 

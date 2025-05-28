@@ -144,8 +144,14 @@ services:
     restart: unless-stopped
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
-      - DB_URL=postgresql+asyncpg://shop:shop@postgres:5432/shop
-      - KAFKA_BOOTSTRAP=kafka:9092
+      - POSTGRES_URL=${POSTGRES_URL}
+      - KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP}
+      - OPENSEARCH_URL=${OPENSEARCH_URL}
+      - OPENSEARCH_HOST=${OPENSEARCH_HOST}
+      - OPENSEARCH_PORT=${OPENSEARCH_PORT}
+      - OPENSEARCH_USE_SSL=${OPENSEARCH_USE_SSL}
+      - OPENSEARCH_VERIFY_CERTS=${OPENSEARCH_VERIFY_CERTS}
+      - OPENSEARCH_INDEX=${OPENSEARCH_INDEX}
     depends_on:
       - postgres
       - kafka
@@ -201,7 +207,7 @@ services:
       CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
-      CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components,/usr/share/confluent-hub-components/opensearch-connector-for-apache-kafka"
+      CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components,/usr/share/confluent-hub-components/opensearch-connector-for-apache-kafka,/usr/share/java,/usr/local/share/kafka/plugins"
 
 
 

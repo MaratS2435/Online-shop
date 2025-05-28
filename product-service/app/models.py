@@ -10,7 +10,7 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
+    quantity_in_stock: Mapped[int] = mapped_column(Integer, default=0)
     seller_id: Mapped[int] = mapped_column(Integer, ForeignKey("sellers.id"), nullable=False)
     created_at: Mapped[func.now()] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 

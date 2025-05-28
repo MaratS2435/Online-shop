@@ -4,16 +4,17 @@
     "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
     "topics": "products",
     "connection.url": "http://opensearch:9200",
-    "index": "products",
-    "key.ignore": "true",
+
+    "key.converter":   "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable":   "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+
+    "tasks.max": "1",
     "schema.ignore": "true",
     "behavior.on.null.values": "delete",
 
-    "transforms": "filterFields",
-    "transforms.filterFields.type": "org.apache.kafka.connect.transforms.MaskField$Value",
-    "transforms.filterFields.fields": "id,name,description",
-
-    "errors.tolerance": "all",
-    "errors.log.enable": "true"
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
   }
 }

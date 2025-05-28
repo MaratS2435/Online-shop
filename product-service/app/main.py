@@ -2,13 +2,16 @@ import asyncio
 import logging
 from typing import List
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
+
+from opensearchpy import AsyncOpenSearch
 
 from app.database import async_session, init_db
 from app import models, schemas
 from app.kafka import kafka_producer
+from app.config import Settings
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -39,6 +42,11 @@ async def get_session() -> AsyncSession:
 
 @app.on_event("startup")
 async def startup_event():
+    app.state.os_client = AsyncOpenSearch(
+        hosts=[{"host": "opensearch", "port": 9200}],
+        use_ssl=False,
+        verify_certs=False,
+    )
     await init_db()
     await kafka_producer.start()
 
@@ -46,6 +54,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     await kafka_producer.stop()
+    await app.state.os_client.close()
 
 
 # -------- Seller endpoints --------
@@ -94,6 +103,30 @@ async def get_product(product_id: int, session: AsyncSession = Depends(get_sessi
             raise HTTPException(status_code=404, detail="Product not found")
         return product
 
+
+@app.get("/products/search/", response_model=schemas.SearchResponse, summary="Поиск товаров")
+async def search_products(
+    q: str  = Query(..., min_length=2),
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+):
+    with tracer.start_as_current_span("get_product"):
+        body = {
+            "query": {
+                "multi_match": {
+                    "query": q,
+                    "fields": ["name", "description"],
+                    "fuzziness": "AUTO",
+                }
+            },
+            "from": (page - 1) * size,
+            "size": size,
+        }
+        resp = await app.state.os_client.search(index=Settings.OPENSEARCH_INDEX, body=body)
+        hits  = resp["hits"]["hits"]
+        total = resp["hits"]["total"]["value"]
+        items = [schemas.ProductRead(**h["_source"]) for h in hits]
+        return schemas.SearchResponse(total=total, items=items)
 
 @app.put("/products/{product_id}", response_model=schemas.ProductRead)
 async def update_product(product_id: int, data: schemas.ProductUpdate, session: AsyncSession = Depends(get_session)):
