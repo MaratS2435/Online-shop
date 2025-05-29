@@ -2,11 +2,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 from opensearchpy import OpenSearch
 from app.config import Settings
+from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
 DATABASE_URL = Settings.POSTGRES_URL
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017")
+DB_NAME = os.getenv("MONGO_DB", "shop")
 
 engine = create_async_engine(DATABASE_URL, pool_size=10, max_overflow=20, future=True)
+
+client: AsyncIOMotorClient | None = None
 
 # фабрика сессий
 async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -21,3 +26,18 @@ async def init_db():
     """Создание схемы при первом старте"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+
+
+def get_db():
+    global client
+    if client is None:
+        client = AsyncIOMotorClient(MONGO_URL)
+    return client[DB_NAME]
+
+
+async def init_indexes():
+    db = get_db()
+    await db.reviews.create_index("product_id")
+    await db.reviews.create_index("created_at")

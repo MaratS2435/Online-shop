@@ -139,8 +139,8 @@ services:
     restart: unless-stopped
 
   # ---------- Services (Python stubs) ----------
-  product-service:
-    build: ./product-service
+  shop:
+    build: ./shop
     restart: unless-stopped
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
@@ -152,7 +152,13 @@ services:
       - OPENSEARCH_USE_SSL=${OPENSEARCH_USE_SSL}
       - OPENSEARCH_VERIFY_CERTS=${OPENSEARCH_VERIFY_CERTS}
       - OPENSEARCH_INDEX=${OPENSEARCH_INDEX}
+      - MONGO_URL=${MONGO_URL}
+      - KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
     depends_on:
+      - mongo
       - postgres
       - kafka
     ports: ["8000:8000"]
@@ -163,23 +169,7 @@ services:
         mode: non-blocking
         max-buffer-size: 4m
 
-  review-service:
-    build: ./review-service
-    restart: unless-stopped
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010"]
-    environment:
-      - MONGO_URL=mongodb://mongo:27017
-      - KAFKA_BOOTSTRAP=kafka:9092
-    depends_on:
-      - mongo
-      - kafka
-    ports: ["8010:8010"]
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        mode: non-blocking
-        max-buffer-size: 4m
+
 
   kafka-connect:
     build:
@@ -209,33 +199,6 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components,/usr/share/confluent-hub-components/opensearch-connector-for-apache-kafka,/usr/share/java,/usr/local/share/kafka/plugins"
 
-
-
-  #  flink-job:
-#    build: ./flink-job
-#    container_name: flink-job
-#    depends_on:
-#      - kafka
-#    restart: unless-stopped
-
-  activity-collector:
-    build: ./activity-collector
-    container_name: activity-collector
-    restart: unless-stopped
-    environment:
-      - KAFKA_BOOTSTRAP=kafka:9092
-    depends_on:
-      - kafka
-    ports:
-      - "8020:8020"
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        mode: non-blocking
-        max-buffer-size: 4m
-
-  # seller-service, review-service, activity-collector → добавим позже
 
 volumes:
   pgdata:

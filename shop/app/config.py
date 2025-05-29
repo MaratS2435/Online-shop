@@ -3,6 +3,7 @@ import os
 
 load_dotenv()
 
+
 class Settings:
     POSTGRES_URL=os.getenv("POSTGRES_URL")
 
@@ -12,3 +13,7 @@ class Settings:
     OPENSEARCH_USE_SSL=os.getenv("OPENSEARCH_USE_SSL")
     OPENSEARCH_VERIFY_CERTS=os.getenv("OPENSEARCH_VERIFY_CERTS")
     OPENSEARCH_INDEX=os.getenv("OPENSEARCH_INDEX")
+
+    JWT_SECRET=os.getenv("JWT_SECRET", "secret")
+    JWT_ALGORITHM=os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
