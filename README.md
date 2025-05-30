@@ -10,6 +10,7 @@ docker compose up -d --build
 open http://localhost:8000/docs     # swagger shop
 open http://localhost:9200          # OpenSearch
 open http://localhost:3000          # Grafana (login admin / admin)
+open http://localhost:5601          # OpenSearch Dashboards
 ```
 Остальные URL пока смотрите в docker-compose.yml
 ## sql для postgres (коннектор debezium)
@@ -39,6 +40,10 @@ curl -X POST http://localhost:8083/connectors \
   
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
+  -d @opensearch-events-sink.json 
+  
+curl -X POST http://localhost:8083/connectors \
+  -H "Content-Type: application/json" \
   -d @debezium-postgres.json
   
 curl -X POST http://localhost:8083/connectors \
@@ -55,4 +60,10 @@ SELECT slot_name, plugin, slot_type, active FROM pg_replication_slots;
 
 -- Проверить публикации
 SELECT * FROM pg_publication;
+```
+
+## OpenSearch аналитика
+Проверка, летят ли в топик пользовательские события
+```bash
+docker exec -it kafka   /opt/bitnami/kafka/bin/kafka-console-consumer.sh   --bootstrap-server kafka:9092   --topic raw-events   --from-beginning   --timeout-ms 5000
 ```

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from opensearchpy import AsyncOpenSearch
 
 from app.dependencies import get_session
+from app.routers.auth import oauth2_scheme
 from app.config import Settings
 from app.models.product_sellers import Product, Seller
 from app.schemas.product_sellers import (

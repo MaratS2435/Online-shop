@@ -6,8 +6,6 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
 DATABASE_URL = Settings.POSTGRES_URL
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017")
-DB_NAME = os.getenv("MONGO_DB", "shop")
 
 engine = create_async_engine(DATABASE_URL, pool_size=10, max_overflow=20, future=True)
 
@@ -33,8 +31,8 @@ async def init_db():
 def get_db():
     global client
     if client is None:
-        client = AsyncIOMotorClient(MONGO_URL)
-    return client[DB_NAME]
+        client = AsyncIOMotorClient(Settings.MONGO_URL)
+    return client[Settings.MONGO_DB]
 
 
 async def init_indexes():

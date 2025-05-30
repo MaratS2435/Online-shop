@@ -17,3 +17,8 @@ class Settings:
     JWT_SECRET=os.getenv("JWT_SECRET", "secret")
     JWT_ALGORITHM=os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+
+    KAFKA_BOOTSTRAP=os.getenv("KAFKA_BOOTSTRAP", "kafka:9092")
+
+    MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017")
+    MONGO_DB = os.getenv("MONGO_DB", "shop")

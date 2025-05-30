@@ -41,6 +41,8 @@ services:
     ports:
       - "9200:9200"
       - "9600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
 
   # ---------- Kafka ----------
   zookeeper:
@@ -138,6 +140,17 @@ services:
       - "4317:4317"   # OTLP gRPC
     restart: unless-stopped
 
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:2.14.0
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+
   # ---------- Services (Python stubs) ----------
   shop:
     build: ./shop
@@ -204,3 +217,4 @@ volumes:
   pgdata:
   mongodata:
   grafanadata:
+  opensearch-data:

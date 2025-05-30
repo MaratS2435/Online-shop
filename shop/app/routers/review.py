@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, HTTPException, status, Depends
+from app.routers.auth import oauth2_scheme
 from app.database import init_indexes
 from app.utils.mongo import obj_id
 from app.schemas.review import ReviewRead, ReviewCreate
@@ -10,6 +11,7 @@ from app.dependencies import reviews_collection
 router = APIRouter(
     prefix="/reviews",
     tags=["reviews"],
+    dependencies=[Depends(oauth2_scheme)]
 )
 
 @router.on_event("startup")

@@ -8,7 +8,7 @@ from typing import Annotated, Optional
 from fastapi import (
     APIRouter, Depends, HTTPException, Response, status, Cookie
 )
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,7 @@ router = APIRouter(
     tags=["auth"],        # метка для OpenAPI-документации
 )
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
 @router.get("/health")
 async def health():
@@ -163,6 +164,6 @@ def _unauthorized(msg: str) -> HTTPException:
     )
 
 
-__all__ = ["router"]
+__all__ = ["router", "oauth2_scheme"]
 
 

@@ -1,0 +1,26 @@
+{
+  "name": "opensearch-events-sink",
+  "config": {
+    "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+    "name": "opensearch-events-sink",
+    "topics": "raw-events",
+
+    "connection.url": "http://opensearch:9200",
+    "index.prefix": "user_events-",
+    "index.suffix": "yyyy-MM-dd",
+
+    "key.ignore": "true",
+    "write.method": "index",
+
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+
+    "schema.ignore": "true",
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages":"true",
+    "tasks.max": "1",
+    "batch.size": "1",
+    "linger.ms": "1000"
+  }
+}
