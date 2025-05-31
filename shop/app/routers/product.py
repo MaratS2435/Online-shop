@@ -1,10 +1,12 @@
 from typing import List
 
+import redis
+import orjson
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_redis
 from app.database import get_session
 from app.config import Settings
 from app.models.product import Product
@@ -62,11 +64,32 @@ async def list_products(session: AsyncSession = Depends(get_session)):
     response_model=ProductRead,
     status_code=status.HTTP_200_OK
 )
-async def get_product(product_id: int, session: AsyncSession = Depends(get_session)):
-    result = await session.scalar(select(Product).filter_by(id=product_id))
+async def get_product(
+        product_id: int,
+        redis_cli = Depends(get_redis),
+        session: AsyncSession = Depends(get_session)
+):
+    cache_key = f"shop:product:{product_id}".encode()
+
+    try:
+        if (cached := await redis_cli.get(cache_key)) is not None:
+            return ProductRead.model_validate(orjson.loads(cached))
+    except redis.RedisError:
+        cached = None
+
+    result = await session.scalar(select(Product).where(Product.id == product_id))
     if not result:
         raise HTTPException(status_code=404, detail="Product not found")
-    return result
+
+    product_schema = ProductRead.model_validate(result)
+
+    if cached is None:
+        try:
+            await redis_cli.setex(cache_key, Settings.TTL, product_schema.model_dump_json().encode())
+        except redis.RedisError:
+            pass  # не критично
+
+    return product_schema
 
 
 @router.get(

@@ -22,3 +22,6 @@ class Settings:
 
     MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017")
     MONGO_DB = os.getenv("MONGO_DB", "shop")
+
+    REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+    TTL = os.getenv("TTL", 300)

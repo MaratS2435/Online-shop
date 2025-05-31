@@ -24,6 +24,14 @@ services:
     volumes:
       - mongodata:/data/db
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: >
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lfu
+    ports: [ "6379:6379" ]
+
   # ---------- Search ----------
   opensearch:
     image: opensearchproject/opensearch:2.14.0
@@ -33,7 +41,7 @@ services:
       - discovery.type=single-node
       - plugins.security.disabled=true     # упрощаем для курса
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Gangball08!
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
     ulimits:
       memlock:
         soft: -1
@@ -183,10 +191,14 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REDIS_URL=${REDIS_URL}
+      - TTL=${TTL}
     depends_on:
       - mongo
       - postgres
       - kafka
+      - redis
+      - opensearch
     ports: ["8000:8000"]
     logging:
       driver: loki

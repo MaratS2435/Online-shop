@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from jose import jwt, JWTError
 
 from app.config import Settings
@@ -12,6 +12,10 @@ from app.schemas.review import TokenData
 async def reviews_collection():
     db = get_db()
     yield db.reviews
+
+
+async def get_redis(request: Request):
+    return request.app.state.redis
 
 
 async def get_current_user(

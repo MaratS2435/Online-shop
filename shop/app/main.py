@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import jwt
 from fastapi import FastAPI, Request
 from opensearchpy import AsyncOpenSearch
+import redis.asyncio as redis
 
 from aiokafka import AIOKafkaProducer
 
@@ -42,6 +43,7 @@ async def startup_event():
         bootstrap_servers=Settings.KAFKA_BOOTSTRAP,
         value_serializer=lambda v: json.dumps(v).encode()
     )
+    app.state.redis = await redis.from_url(Settings.REDIS_URL, decode_responses=False)
     await producer.start()
     app.state.producer = producer
     await init_db()
@@ -49,6 +51,7 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    await app.state.redis.close()
     await app.state.producer.stop()
     await app.state.os_client.close()
 
