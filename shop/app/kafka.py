@@ -1,4 +1,4 @@
-import json, os, asyncio, logging
+import json, os, logging
 from aiokafka import AIOKafkaProducer
 
 logger = logging.getLogger(__name__)

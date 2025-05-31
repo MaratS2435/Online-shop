@@ -4,7 +4,7 @@ from pydantic import (
     BaseModel, Field, PositiveInt,
     EmailStr, SecretStr
 )
-from typing import Optional, List, Annotated
+from typing import Optional, Annotated
 
 Name     = Annotated[str,       Field(min_length=1, max_length=255)]
 Password = Annotated[SecretStr, Field(min_length=8, max_length=128)]

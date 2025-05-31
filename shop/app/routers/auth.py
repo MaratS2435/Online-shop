@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_session
+from app.database import get_session
 from app.config import Settings
 from app.models.auth import User
 from app.schemas.auth import UserCreate, UserRead
@@ -106,7 +106,7 @@ async def login(
         )
 
     # 3) генерируем JWT
-    access_token, refresh_token = create_tokens(user.email, user.id)
+    access_token, refresh_token = create_tokens(user.email, user.id, user.name)
 
     # 4) кладём refresh-токен в httpOnly cookie
     response.set_cookie(
@@ -141,7 +141,7 @@ async def refresh(
     except jwt.PyJWTError:
         raise _unauthorized("Invalid refresh token")
 
-    access_token, _ = create_tokens(payload["email"], payload["user_id"])
+    access_token, _ = create_tokens(payload["email"], payload["user_id"], payload["name"])
 
     # по желанию: обновляем cookie, чтобы продлить max-age
     response.set_cookie(

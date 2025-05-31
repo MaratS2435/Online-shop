@@ -3,7 +3,6 @@ from sqlalchemy.orm import DeclarativeBase
 from opensearchpy import OpenSearch
 from app.config import Settings
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
 
 DATABASE_URL = Settings.POSTGRES_URL
 
@@ -39,3 +38,8 @@ async def init_indexes():
     db = get_db()
     await db.reviews.create_index("product_id")
     await db.reviews.create_index("created_at")
+
+
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        yield session

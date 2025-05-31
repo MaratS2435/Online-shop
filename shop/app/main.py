@@ -1,17 +1,16 @@
 import json
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import jwt
 from fastapi import FastAPI, Request
-from fastapi.security import OAuth2PasswordBearer
 from opensearchpy import AsyncOpenSearch
 
 from aiokafka import AIOKafkaProducer
 
 from app.config import Settings
-from app.routers import product_sellers, auth, review
+from app.routers import product, auth, review
 from app.database import init_db
 
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -24,7 +23,7 @@ app = FastAPI(title="Online Shop", version="0.1.0")
 producer: AIOKafkaProducer | None = None
 Instrumentator().instrument(app).expose(app)  # /metrics
 
-app.include_router(product_sellers.router)
+app.include_router(product.router)
 app.include_router(auth.router)
 app.include_router(review.router)
 
@@ -55,7 +54,7 @@ async def shutdown_event():
 @app.middleware("http")
 async def user_activity(request: Request, call_next):
     try:
-        token = await auth.oauth2_scheme(request)     # <-- вытаскиваем "Bearer XXX"
+        token = await auth.oauth2_scheme(request)
         payload = jwt.decode(token, Settings.JWT_SECRET, algorithms=["HS256"])
         user_id = payload["user_id"]
     except Exception:
@@ -67,15 +66,15 @@ async def user_activity(request: Request, call_next):
         event_id = str(uuid.uuid4())
         event = {
             "event_id": event_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_id": user_id,
             "method": request.method,
             "path": request.url.path,
             "status": response.status_code,
         }
-        await producer.send_and_wait(
+        await producer.send(
             TOPIC,
-            key=event_id.encode(),  # ← добавили!
+            key=event_id.encode(),
             value=event
         )
     return response
