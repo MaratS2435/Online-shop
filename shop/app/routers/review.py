@@ -1,7 +1,8 @@
+import uuid
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 
 from app.database import init_indexes
 from app.utils.mongo import obj_id
@@ -28,6 +29,7 @@ async def startup():
     status_code=status.HTTP_201_CREATED
 )
 async def create_review(
+        request: Request,
         data: ReviewCreate,
         current_user: TokenData = Depends(get_current_user),
         coll=Depends(reviews_collection)
@@ -42,6 +44,19 @@ async def create_review(
         }
     )
     res = await coll.insert_one(doc)
+
+    event_id = str(uuid.uuid4())
+    event = {
+        "id": str(res.inserted_id),
+        "text": doc["text"],
+        "product_id": doc["product_id"],
+    }
+    await request.app.state.producer.send(
+        "review-created",
+        key=event_id.encode(),
+        value=event
+    )
+
     return {"id": str(res.inserted_id), **doc}
 
 

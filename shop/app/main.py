@@ -36,18 +36,18 @@ async def startup_event():
         use_ssl=False,
         verify_certs=False,
     )
-    global producer
     producer = AIOKafkaProducer(
         bootstrap_servers=Settings.KAFKA_BOOTSTRAP,
         value_serializer=lambda v: json.dumps(v).encode()
     )
     await producer.start()
+    app.state.producer = producer
     await init_db()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await producer.stop()
+    await app.state.producer.stop()
     await app.state.os_client.close()
 
 
@@ -62,7 +62,7 @@ async def user_activity(request: Request, call_next):
 
     response = await call_next(request)
 
-    if producer:
+    if app.state.producer:
         event_id = str(uuid.uuid4())
         event = {
             "event_id": event_id,
@@ -72,7 +72,7 @@ async def user_activity(request: Request, call_next):
             "path": request.url.path,
             "status": response.status_code,
         }
-        await producer.send(
+        await app.state.producer.send(
             TOPIC,
             key=event_id.encode(),
             value=event

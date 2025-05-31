@@ -8,17 +8,14 @@ scrape_configs:
     metrics_path: "/metrics"
     static_configs:
       - targets: [
-          "product-service:8000",
-          "review-service:8010",
-          "activity-collector:8020"
+          "shop:8000",
         ]
+
+  - job_name: review-analyser
+    static_configs:
+      - targets: [ "review-analyser:8000" ]
 
   # Kafka + Connect (JMX exporter)
   - job_name: "kafka"
     static_configs:
       - targets: ["kafka:7071", "kafka-connect:7071"]
-
-  # Flink (+ TaskManager)
-  - job_name: "flink"
-    static_configs:
-      - targets: ["flink-job:9249"]

@@ -76,11 +76,24 @@ services:
 #        max-buffer-size: 4m
 
   # ---------- Analytics ----------
-  clickhouse:
-    image: clickhouse/clickhouse-server:24.2
-    container_name: clickhouse
-    restart: unless-stopped
-    ports: ["9000:9000", "8123:8123"]
+#  clickhouse:
+#    image: clickhouse/clickhouse-server:24.2
+#    container_name: clickhouse
+#    restart: unless-stopped
+#    ports: ["9000:9000", "8123:8123"]
+
+  review-analyser:
+    build: ./review-analyser
+    environment:
+      - KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP}
+      - KAFKA_TOPIC=review-created
+      - TARGET=os
+      - OS_HOST=${OPENSEARCH_HOST}
+      - OS_PORT=${OPENSEARCH_PORT}
+      - PROM_PORT=8000
+    depends_on:
+      - kafka
+      - opensearch
 
   # ---------- Observability ----------
   prometheus:
@@ -108,16 +121,16 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     ports: ["3100:3100"]
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.58
-    container_name: jaeger
-    restart: unless-stopped
-    ports:
-      - "16686:16686"
-      - "14250:14250"
-      - "9411:9411"
-    environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+#  jaeger:
+#    image: jaegertracing/all-in-one:1.58
+#    container_name: jaeger
+#    restart: unless-stopped
+#    ports:
+#      - "16686:16686"
+#      - "14250:14250"
+#      - "9411:9411"
+#    environment:
+#      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
 
 
   promtail:
@@ -130,15 +143,15 @@ services:
       - ./observability/promtail-config.yaml:/etc/promtail/config.yml:ro
     command: -config.file=/etc/promtail/config.yml
 
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.99.0
-    container_name: otel-collector
-    command: [ "--config=/etc/otel-collector-config.yml" ]
-    volumes:
-      - ./observability/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
-    ports:
-      - "4317:4317"   # OTLP gRPC
-    restart: unless-stopped
+#  otel-collector:
+#    image: otel/opentelemetry-collector-contrib:0.99.0
+#    container_name: otel-collector
+#    command: [ "--config=/etc/otel-collector-config.yml" ]
+#    volumes:
+#      - ./observability/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+#    ports:
+#      - "4317:4317"   # OTLP gRPC
+#    restart: unless-stopped
 
   dashboards:
     image: opensearchproject/opensearch-dashboards:2.14.0
@@ -181,7 +194,6 @@ services:
         loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
-
 
 
   kafka-connect:

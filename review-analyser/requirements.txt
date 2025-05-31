@@ -1,0 +1,24 @@
+# базовые числовые
+numpy==2.2.6        # 1.27 работает с torch 2.7
+
+# PyTorch CPU  (доступные колёса cp311)
+torch==2.7.0+cpu          # ← вместо 2.7.1+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# безопасность / новые веса
+safetensors==0.4.3
+
+# NLP
+transformers==4.52.4   # май-2025
+accelerate==0.29.3
+sentencepiece==0.2.0   # нужен для XLM-R
+
+# Kafka / хранилища
+aiokafka==0.10.0
+opensearch-py[async]==2.4.2
+motor==3.4.0
+pymongo==4.6.3
+
+# метрики / логи
+prometheus-client==0.20.0
+python-json-logger==2.0.7
