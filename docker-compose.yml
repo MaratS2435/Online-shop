@@ -17,7 +17,7 @@ services:
                -c max_replication_slots=10
 
   mongo:
-    image: mongo:6
+    image: mongo:4.4
     container_name: mongo
     restart: unless-stopped
     ports: ["27017:27017"]

@@ -10,7 +10,7 @@ from opensearchpy import AsyncOpenSearch
 from aiokafka import AIOKafkaProducer
 
 from app.config import Settings
-from app.routers import product, auth, review
+from app.routers import product, auth, review, transactions
 from app.database import init_db
 
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -26,6 +26,8 @@ Instrumentator().instrument(app).expose(app)  # /metrics
 app.include_router(product.router)
 app.include_router(auth.router)
 app.include_router(review.router)
+
+app.include_router(transactions.router)
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
