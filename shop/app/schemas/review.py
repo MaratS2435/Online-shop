@@ -21,7 +21,7 @@ class ReviewRead(ReviewCreate):
     user_id: PositiveInt
     name: Annotated[str, Field(min_length=1, max_length=100)]
     created_at: datetime
-    replies: list[Reply] = []  # ← добавили
+    replies: list[Reply] = []
 
 class TokenData(BaseModel):
     user_id: PositiveInt

@@ -1,5 +1,4 @@
 services:
-  # ---------- Databases ----------
   postgres:
     image: postgres:15
     container_name: pg
@@ -24,14 +23,13 @@ services:
     volumes:
       - mongodata:/data/db
 
-  # ---------- Search ----------
   opensearch:
     image: opensearchproject/opensearch:2.14.0
     container_name: opensearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
-      - plugins.security.disabled=true     # упрощаем для курса
+      - plugins.security.disabled=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Gangball08!
     ulimits:
@@ -44,7 +42,6 @@ services:
     volumes:
       - opensearch-data:/usr/share/opensearch/data
 
-  # ---------- Kafka ----------
   zookeeper:
     image: bitnami/zookeeper:3.9
     container_name: zookeeper
@@ -68,21 +65,8 @@ services:
       - zookeeper
     ports:
       - "29092:29092"
-#    logging:
-#      driver: loki
-#      options:
-#        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-#        mode: non-blocking
-#        max-buffer-size: 4m
 
-  # ---------- Analytics ----------
-  clickhouse:
-    image: clickhouse/clickhouse-server:24.2
-    container_name: clickhouse
-    restart: unless-stopped
-    ports: ["9000:9000", "8123:8123"]
 
-  # ---------- Observability ----------
   prometheus:
     image: prom/prometheus:v2.52.0
     container_name: prometheus
@@ -137,7 +121,7 @@ services:
     volumes:
       - ./observability/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
     ports:
-      - "4317:4317"   # OTLP gRPC
+      - "4317:4317"
     restart: unless-stopped
 
   dashboards:
@@ -151,7 +135,6 @@ services:
     depends_on:
       - opensearch
 
-  # ---------- Services (Python stubs) ----------
   shop:
     build: ./shop
     restart: unless-stopped

@@ -21,7 +21,7 @@ logger = logging.getLogger("product-service")
 TOPIC = "raw-events"
 app = FastAPI(title="Online Shop", version="0.1.0")
 producer: AIOKafkaProducer | None = None
-Instrumentator().instrument(app).expose(app)  # /metrics
+Instrumentator().instrument(app).expose(app)
 
 app.include_router(product.router)
 app.include_router(auth.router)
@@ -29,7 +29,6 @@ app.include_router(review.router)
 
 app.include_router(transactions.router)
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
 @app.on_event("startup")
 async def startup_event():

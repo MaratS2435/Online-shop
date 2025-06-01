@@ -4,9 +4,9 @@
 ```bash
 git clone <this‑repo>
 cd online‑shop
-# 1) Запускаем всё
+
 docker compose up -d --build
-# 2) Проверяем
+
 open http://localhost:8000/docs     # swagger shop
 open http://localhost:9200          # OpenSearch
 open http://localhost:3000          # Grafana (login admin / admin)
@@ -17,18 +17,6 @@ open http://localhost:5601          # OpenSearch Dashboards
 ```sql
 ALTER ROLE shop WITH REPLICATION;
 CREATE PUBLICATION shop_products_pub FOR TABLE public.products;
-```
-
-## sql для clickhouse (коннектор clickhouse)
-```sql
-CREATE TABLE user_events (
-    user_id     UInt64,
-    action      String,
-    product_id  UInt64,
-    time        DateTime
-)
-ENGINE = MergeTree()
-ORDER BY (time);
 ```
 
 ## Регистрация коннекторов
@@ -45,10 +33,6 @@ curl -X POST http://localhost:8083/connectors \
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
   -d @debezium-postgres.json
-  
-curl -X POST http://localhost:8083/connectors \
-  -H "Content-Type: application/json" \
-  -d @clickhouse-sink.json
 ```
 Проверка
 ```bash
