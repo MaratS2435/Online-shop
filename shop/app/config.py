@@ -3,6 +3,20 @@ import os
 
 load_dotenv()
 
+S3_CONFIG = {
+    "endpoint_url": "http://minio:9000",
+    "aws_access_key_id": "minio",
+    "aws_secret_access_key": "minio123",
+    "bucket_name": "csvbucket",
+}
+
+POSTGRES_CONFIG = {
+    "host": "postgres",
+    "port": 5432,
+    "dbname": "shop",
+    "user": "shop",
+    "password": "shop",
+}
 
 class Settings:
     POSTGRES_URL=os.getenv("POSTGRES_URL")
@@ -22,3 +36,6 @@ class Settings:
 
     MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:27017")
     MONGO_DB = os.getenv("MONGO_DB", "shop")
+
+    REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+    TTL = os.getenv("TTL", 300)

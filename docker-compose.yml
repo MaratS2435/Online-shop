@@ -24,6 +24,14 @@ services:
     volumes:
       - mongodata:/data/db
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: >
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lfu
+    ports: [ "6379:6379" ]
+
   # ---------- Search ----------
   opensearch:
     image: opensearchproject/opensearch:2.14.0
@@ -33,7 +41,7 @@ services:
       - discovery.type=single-node
       - plugins.security.disabled=true     # упрощаем для курса
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Gangball08!
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
     ulimits:
       memlock:
         soft: -1
@@ -60,14 +68,23 @@ services:
     stop_grace_period: 20s
     environment:
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       ALLOW_PLAINTEXT_LISTENER: "yes"
     depends_on:
       - zookeeper
     ports:
+      - "9092:9092"
       - "29092:29092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+
 #    logging:
 #      driver: loki
 #      options:
@@ -183,10 +200,14 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REDIS_URL=${REDIS_URL}
+      - TTL=${TTL}
     depends_on:
       - mongo
       - postgres
       - kafka
+      - redis
+      - opensearch
     ports: ["8000:8000"]
     logging:
       driver: loki
@@ -224,9 +245,76 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components,/usr/share/confluent-hub-components/opensearch-connector-for-apache-kafka,/usr/share/java,/usr/local/share/kafka/plugins"
 
+  minio:
+      image: minio/minio
+      container_name: minio
+      environment:
+        MINIO_ROOT_USER: minio
+        MINIO_ROOT_PASSWORD: minio123
+      ports:
+        - "19000:9000"
+        - "19001:9001"
+      command: server /data --console-address ":9001"
+      volumes:
+        - minio_data:/data
+
+  worker:
+      build:
+        context: .
+        dockerfile: worker/Dockerfile
+      container_name: etl_worker  # переместил сюда, на один уровень с build
+      depends_on:
+        kafka:
+          condition: service_healthy
+        postgres:
+          condition: service_started
+        minio:
+          condition: service_started
+        spark:
+          condition: service_started
+      volumes:
+        - ./postgresql-42.6.0.jar:/opt/bitnami/spark/jars/postgresql-42.6.0.jar
+      environment:
+        KAFKA_SERVER: kafka:9092
+        SPARK_MASTER_URL: spark://spark:7077
+      working_dir: /app
+      command: python worker.py
+
+
+  spark:
+    image: bitnami/spark:latest
+    container_name: spark
+    depends_on:
+      - minio
+      - postgres
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077"  # Spark standalone master port
+      - "8080:8080"  # Spark web UI
+    volumes:
+      - ./app:/app
+      - ./postgresql-42.6.0.jar:/opt/bitnami/spark/jars/postgresql-42.6.0.jar
+    working_dir: /app
+
+  spark_worker:
+    image: bitnami/spark:latest
+    container_name: spark_worker
+    depends_on:
+      - spark
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+    ports:
+      - "8081:8081" # Spark worker web UI
+    volumes:
+      - ./app:/app
+      - ./postgresql-42.6.0.jar:/opt/bitnami/spark/jars/postgresql-42.6.0.jar
+    working_dir: /app
 
 volumes:
   pgdata:
   mongodata:
   grafanadata:
   opensearch-data:
+  minio_data:

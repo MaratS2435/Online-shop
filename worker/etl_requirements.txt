@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+boto3
+kafka-python
+pyspark
+python-dotenv
+python-multipart
+delta-spark==2.4.0
+psycopg2-binary>=2.9.9
