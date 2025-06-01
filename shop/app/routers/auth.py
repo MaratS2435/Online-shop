@@ -21,8 +21,8 @@ from app.utils.tokens import create_tokens
 
 
 router = APIRouter(
-    prefix="/auth",       # общий префикс URL
-    tags=["auth"],        # метка для OpenAPI-документации
+    prefix="/auth",
+    tags=["auth"],
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")

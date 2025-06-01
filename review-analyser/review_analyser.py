@@ -4,9 +4,6 @@ from aiokafka import AIOKafkaConsumer
 from prometheus_client import Counter, Summary, start_http_server
 from transformers import pipeline
 from opensearchpy import AsyncOpenSearch
-from motor.motor_asyncio import AsyncIOMotorClient
-from bson import ObjectId
-
 
 BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:9092")
 TOPIC      = os.getenv("KAFKA_TOPIC", "review-created")
@@ -35,7 +32,7 @@ sentiment_pipe = pipeline(
 )
 toxic_pipe = pipeline(
     "text-classification",
-    model="textdetox/xlmr-large-toxicity-classifier-v2",
+    model="unitary/toxic-bert",
     truncation=True,
     batch_size=32,
 )
@@ -73,23 +70,37 @@ async def run():
             with LATENCY.time():
                 loop = asyncio.get_running_loop()
                 LABEL_MAP = {"LABEL_0": "negative", "LABEL_1": "neutral", "LABEL_2": "positive"}
+                THRESHOLD = 0.35
 
                 def normalize_sent(pred_label: str) -> str:
                     if pred_label in LABEL_MAP:
                         return LABEL_MAP[pred_label]
                     return pred_label.lower()
 
-                sent_predict = loop.run_in_executor(
-                    None,
-                    lambda: normalize_sent(sentiment_pipe(text)[0]["label"])
-                )
+                def is_toxic(txt: str, thr: float = THRESHOLD) -> bool:
+                    """
+                    Возвращает True, если модель считает текст токсичным с вероятностью ≥ thr.
+                    Работает для моделей с метками 'toxic' / 'non-toxic' или LABEL_i.
+                    """
+                    out = toxic_pipe(txt, return_all_scores=True)[0]  # список словарей
+                    scores = {d["label"].lower(): d["score"] for d in out}
 
-                tox_predict = loop.run_in_executor(
-                    None,
-                    lambda: toxic_pipe(text)[0]["label"] == "toxic",
-                )
+                    # если метка 'toxic' есть явно — берём её score
+                    if "toxic" in scores:
+                        return scores["toxic"] >= thr
 
-                sent, toxic = await asyncio.gather(sent_predict, tox_predict)
+                    # fallback на старый формат LABEL_…
+                    return scores.get("label_1", 0.0) >= thr  # зависит от конкретной модели
+
+                sent_future = loop.run_in_executor(
+                    None,
+                    lambda: normalize_sent(sentiment_pipe(text)[0]["label"]),
+                )
+                tox_future = loop.run_in_executor(
+                    None,
+                    lambda: is_toxic(text, THRESHOLD),
+                )
+                sent, toxic = await asyncio.gather(sent_future, tox_future)
 
             enriched = {
                 "id": data["id"],

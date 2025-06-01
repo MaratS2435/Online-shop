@@ -18,14 +18,14 @@ from app.schemas.review import TokenData
 
 
 router = APIRouter(
-    prefix="/products-sellers",
-    tags=["products-sellers"],
+    prefix="/products",
+    tags=["products"],
 )
 
 
 # -------- Product endpoints --------
 @router.post(
-    "/products",
+    "/",
     response_model=ProductRead,
     status_code=status.HTTP_201_CREATED
 )
@@ -51,7 +51,7 @@ async def create_product(
 
 
 @router.get(
-    "/products",
+    "/",
     response_model=List[ProductRead]
 )
 async def list_products(session: AsyncSession = Depends(get_session)):
@@ -60,7 +60,7 @@ async def list_products(session: AsyncSession = Depends(get_session)):
 
 
 @router.get(
-    "/products/{product_id}",
+    "/{product_id}/",
     response_model=ProductRead,
     status_code=status.HTTP_200_OK
 )
@@ -93,7 +93,7 @@ async def get_product(
 
 
 @router.get(
-    "/products/search/",
+    "/search/",
     response_model=SearchResponse,
     summary="Поиск товаров"
 )
@@ -122,7 +122,7 @@ async def search_products(
 
 
 @router.patch(
-    "/products/{product_id}",
+    "/{product_id}/",
     response_model=ProductRead,
     status_code=status.HTTP_200_OK,
 )
@@ -154,7 +154,7 @@ async def update_product(
 
 
 @router.delete(
-    "/products/{product_id}",
+    "/{product_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_product(
@@ -171,3 +171,72 @@ async def delete_product(
 
     await session.delete(product)
     await session.commit()
+
+
+from fastapi import UploadFile
+from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
+import boto3
+from botocore.exceptions import ClientError
+from app.config import S3_CONFIG
+
+
+from fastapi import Request
+
+@router.post(
+    "/upload/",
+    summary="Загрузка CSV-файла в S3",
+    status_code=status.HTTP_200_OK
+)
+async def upload_csv(
+    file: UploadFile,
+    request: Request,
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        user_id = current_user.user_id
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+        file_name = f"{timestamp}_user_{user_id}.csv"
+
+        content = await file.read()
+
+        # Загрузка в S3
+        session = boto3.session.Session()
+        s3 = session.client(
+            service_name="s3",
+            endpoint_url=S3_CONFIG["endpoint_url"],
+            aws_access_key_id=S3_CONFIG["aws_access_key_id"],
+            aws_secret_access_key=S3_CONFIG["aws_secret_access_key"],
+        )
+
+        try:
+            s3.head_bucket(Bucket=S3_CONFIG["bucket_name"])
+        except ClientError as e:
+            error_code = int(e.response['Error']['Code'])
+            if error_code == 404:
+                s3.create_bucket(Bucket=S3_CONFIG["bucket_name"])
+            else:
+                raise
+
+        s3.put_object(Bucket=S3_CONFIG["bucket_name"], Key=file_name, Body=content)
+
+        # --- Отправка события в Kafka ---
+        message = {
+            "event": "file_uploaded",
+            "file_name": file_name,
+            "user_id": user_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        producer = request.app.state.producer
+        if producer:
+            await producer.send_and_wait(
+                topic="uploads",
+                key=file_name.encode(),
+                value=message
+            )
+
+        return {"message": "Uploaded to S3 and sent to Kafka", "file": file_name}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

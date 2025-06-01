@@ -3,6 +3,20 @@ import os
 
 load_dotenv()
 
+S3_CONFIG = {
+    "endpoint_url": "http://minio:9000",
+    "aws_access_key_id": "minio",
+    "aws_secret_access_key": "minio123",
+    "bucket_name": "csvbucket",
+}
+
+POSTGRES_CONFIG = {
+    "host": "postgres",
+    "port": 5432,
+    "dbname": "shop",
+    "user": "shop",
+    "password": "shop",
+}
 
 class Settings:
     POSTGRES_URL=os.getenv("POSTGRES_URL")
