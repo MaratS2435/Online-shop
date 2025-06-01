@@ -209,12 +209,12 @@ services:
       - redis
       - opensearch
     ports: ["8000:8000"]
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
-        mode: non-blocking
-        max-buffer-size: 4m
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
+#        mode: non-blocking
+#        max-buffer-size: 4m
 
 
   kafka-connect:

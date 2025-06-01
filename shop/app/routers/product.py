@@ -16,14 +16,14 @@ from app.schemas.review import TokenData
 
 
 router = APIRouter(
-    prefix="/products-sellers",
-    tags=["products-sellers"],
+    prefix="/products",
+    tags=["products"],
 )
 
 
 # -------- Product endpoints --------
 @router.post(
-    "/products",
+    "/",
     response_model=ProductRead,
     status_code=status.HTTP_201_CREATED
 )
@@ -49,7 +49,7 @@ async def create_product(
 
 
 @router.get(
-    "/products",
+    "/",
     response_model=List[ProductRead]
 )
 async def list_products(session: AsyncSession = Depends(get_session)):
@@ -58,7 +58,7 @@ async def list_products(session: AsyncSession = Depends(get_session)):
 
 
 @router.get(
-    "/products/{product_id}",
+    "/{product_id}/",
     response_model=ProductRead,
     status_code=status.HTTP_200_OK
 )
@@ -70,7 +70,7 @@ async def get_product(product_id: int, session: AsyncSession = Depends(get_sessi
 
 
 @router.get(
-    "/products/search/",
+    "/search/",
     response_model=SearchResponse,
     summary="Поиск товаров"
 )
@@ -99,7 +99,7 @@ async def search_products(
 
 
 @router.patch(
-    "/products/{product_id}",
+    "/{product_id}/",
     response_model=ProductRead,
     status_code=status.HTTP_200_OK,
 )
@@ -131,7 +131,7 @@ async def update_product(
 
 
 @router.delete(
-    "/products/{product_id}",
+    "/{product_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_product(
@@ -152,7 +152,7 @@ async def delete_product(
 
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timezone
 import boto3
 from botocore.exceptions import ClientError
 from app.config import S3_CONFIG
@@ -161,7 +161,7 @@ from app.config import S3_CONFIG
 from fastapi import Request
 
 @router.post(
-    "/upload",
+    "/upload/",
     summary="Загрузка CSV-файла в S3",
     status_code=status.HTTP_200_OK
 )
@@ -172,7 +172,7 @@ async def upload_csv(
 ):
     try:
         user_id = current_user.user_id
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         file_name = f"{timestamp}_user_{user_id}.csv"
 
         content = await file.read()

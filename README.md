@@ -45,10 +45,6 @@ curl -X POST http://localhost:8083/connectors \
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
   -d @debezium-postgres.json
-  
-curl -X POST http://localhost:8083/connectors \
-  -H "Content-Type: application/json" \
-  -d @clickhouse-sink.json
 ```
 Проверка
 ```bash

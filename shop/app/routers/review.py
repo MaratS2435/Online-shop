@@ -24,7 +24,7 @@ async def startup():
 
 # Endpoints
 @router.post(
-    "/reviews",
+    "/",
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED
 )
@@ -61,7 +61,7 @@ async def create_review(
 
 
 @router.post(
-    "/reviews/{review_id}/reply",
+    "/{review_id}/reply/",
     response_model=ReviewRead,
     status_code=201,
 )
@@ -93,7 +93,7 @@ async def add_reply(
 
 
 @router.delete(
-    "/reviews/{review_id}/reply/{index}",
+    "/{review_id}/reply/{index}/",
     status_code=204,
 )
 async def delete_reply(
@@ -119,7 +119,7 @@ async def delete_reply(
 
 
 @router.get(
-    "/reviews",
+    "/",
     response_model=List[ReviewRead]
 )
 async def list_reviews(
@@ -136,7 +136,7 @@ async def list_reviews(
 
 
 @router.delete(
-    "/reviews/{review_id}",
+    "/{review_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_review(
