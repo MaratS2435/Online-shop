@@ -82,7 +82,7 @@ async def run():
                     return pred_label.lower()
 
                 def is_toxic(txt: str, thr: float = THRESHOLD) -> bool:
-                    out = toxic_pipe(txt, return_all_scores=True)[0]  # список словарей
+                    out = toxic_pipe(txt, return_all_scores=True)[0]
                     scores = {d["label"].lower(): d["score"] for d in out}
 
                     if "toxic" in scores:

@@ -14,12 +14,10 @@ async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncS
 
 
 class Base(DeclarativeBase):
-    """Базовый класс моделей"""
     pass
 
 
 async def init_db():
-    """Создание схемы при первом старте"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
