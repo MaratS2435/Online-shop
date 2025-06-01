@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# Оптимально устанавливаем системные зависимости
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*

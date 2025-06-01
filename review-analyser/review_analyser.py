@@ -78,19 +78,14 @@ async def run():
                     return pred_label.lower()
 
                 def is_toxic(txt: str, thr: float = THRESHOLD) -> bool:
-                    """
-                    Возвращает True, если модель считает текст токсичным с вероятностью ≥ thr.
-                    Работает для моделей с метками 'toxic' / 'non-toxic' или LABEL_i.
-                    """
-                    out = toxic_pipe(txt, return_all_scores=True)[0]  # список словарей
+
+                    out = toxic_pipe(txt, return_all_scores=True)[0]
                     scores = {d["label"].lower(): d["score"] for d in out}
 
-                    # если метка 'toxic' есть явно — берём её score
                     if "toxic" in scores:
                         return scores["toxic"] >= thr
 
-                    # fallback на старый формат LABEL_…
-                    return scores.get("label_1", 0.0) >= thr  # зависит от конкретной модели
+                    return scores.get("label_1", 0.0) >= thr
 
                 sent_future = loop.run_in_executor(
                     None,

@@ -19,18 +19,6 @@ ALTER ROLE shop WITH REPLICATION;
 CREATE PUBLICATION shop_products_pub FOR TABLE public.products;
 ```
 
-## sql для clickhouse (коннектор clickhouse)
-```sql
-CREATE TABLE user_events (
-    user_id     UInt64,
-    action      String,
-    product_id  UInt64,
-    time        DateTime
-)
-ENGINE = MergeTree()
-ORDER BY (time);
-```
-
 ## Регистрация коннекторов
 Из папки `kafka-connect/connectors` выполним
 ```bash

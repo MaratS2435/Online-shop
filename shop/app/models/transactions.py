@@ -9,7 +9,7 @@ class Transaction(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)  # > 0 is deposit, < 0 is purchase
-    type: Mapped[str] = mapped_column(String(50), nullable=False)  # "deposit" or "purchase"
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
     product_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("products.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

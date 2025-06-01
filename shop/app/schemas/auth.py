@@ -24,9 +24,9 @@ class UserRead(UserBase):
     id: PositiveInt
 
     model_config = {
-        "from_attributes": True,   # для SQLAlchemy .from_orm()
-        "extra": "forbid",         # запрет лишних полей
-        "populate_by_name": True,  # если нужны alias-ы
+        "from_attributes": True,
+        "extra": "forbid",
+        "populate_by_name": True,
     }
 
 
@@ -43,7 +43,7 @@ class UserUpdate(BaseModel):
 
     model_config = {
         "extra": "forbid",
-        "validate_assignment": True,  # чтобы .field = value проходил валидацию
+        "validate_assignment": True,
     }
 
 

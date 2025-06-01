@@ -21,7 +21,6 @@ router = APIRouter(
 )
 
 
-# -------- Product endpoints --------
 @router.post(
     "/",
     response_model=ProductRead,
@@ -32,17 +31,15 @@ async def create_product(
         current_user: TokenData = Depends(get_current_user),
         session: AsyncSession = Depends(get_session)
 ):
-    # создаём словарь из модели и добавляем user_id
     doc = data.model_dump()
     doc["user_id"] = current_user.user_id
 
-    product = Product(**doc)  # создаём SQLAlchemy-модель
+    product = Product(**doc)
 
     session.add(product)
     await session.commit()
     await session.refresh(product)
 
-    # await kafka_producer.send({"action": "created", "product": ProductRead.model_validate(product).model_dump()})
 
     return product
 
@@ -151,7 +148,6 @@ async def delete_product(
 
 
 from fastapi import UploadFile
-from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 import boto3
 from botocore.exceptions import ClientError
@@ -177,7 +173,6 @@ async def upload_csv(
 
         content = await file.read()
 
-        # Загрузка в S3
         session = boto3.session.Session()
         s3 = session.client(
             service_name="s3",
@@ -197,7 +192,6 @@ async def upload_csv(
 
         s3.put_object(Bucket=S3_CONFIG["bucket_name"], Key=file_name, Body=content)
 
-        # --- Отправка события в Kafka ---
         message = {
             "event": "file_uploaded",
             "file_name": file_name,
