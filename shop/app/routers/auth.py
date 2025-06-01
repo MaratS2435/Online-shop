@@ -143,14 +143,11 @@ async def refresh(
 
     access_token, _ = create_tokens(payload["email"], payload["user_id"], payload["name"])
 
-    # по желанию: обновляем cookie, чтобы продлить max-age
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        # secure=Settings.COOKIE_SECURE,
         samesite="lax",
-        # max_age=Settings.REFRESH_TTL,
         path="/",
     )
     return {"access_token": access_token, "token_type": "bearer"}

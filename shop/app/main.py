@@ -30,7 +30,6 @@ app.include_router(review.router)
 
 app.include_router(transactions.router)
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
 @app.on_event("startup")
 async def startup_event():

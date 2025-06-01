@@ -22,7 +22,6 @@ async def startup():
     await init_indexes()
 
 
-# Endpoints
 @router.post(
     "/",
     response_model=ReviewRead,
@@ -81,7 +80,7 @@ async def add_reply(
     res = await coll.find_one_and_update(
         {"_id": obj_id(review_id)},
         {"$push": {"replies": reply}},
-        return_document=True,          # вернуть обновлённый документ
+        return_document=True,
     )
     if res is None:
         raise HTTPException(404, "Comment not found")
@@ -98,17 +97,15 @@ async def add_reply(
 )
 async def delete_reply(
     review_id: str,
-    index: int,                              # номер в массиве
+    index: int,
     curr=Depends(get_current_user),
     coll=Depends(reviews_collection),
 ):
-    # выбираем только свои ответы или админ
     path = f"replies.{index}.user_id"
     doc = await coll.find_one({"_id": obj_id(review_id), path: curr.user_id})
     if not doc:
         raise HTTPException(404, "Not found or not owner")
 
-    # $unset + $pull, чтобы убрать дырку
     await coll.update_one(
         {"_id": obj_id(review_id)},
         {
@@ -144,15 +141,12 @@ async def delete_review(
         curr: TokenData = Depends(get_current_user),
         coll=Depends(reviews_collection),
 ):
-    # 1. Ищем документ, чтобы узнать автора
     doc = await coll.find_one({"_id": obj_id(review_id)})
     if not doc:
         raise HTTPException(status_code=404, detail="Not found")
 
-    # 2. Разрешаем удалять только автору или администратору
     is_owner = doc["user_id"] == curr.user_id
     if not is_owner:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # 3. Удаляем
     await coll.delete_one({"_id": obj_id(review_id)})

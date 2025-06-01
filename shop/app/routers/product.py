@@ -60,7 +60,7 @@ async def list_products(session: AsyncSession = Depends(get_session)):
 
 
 @router.get(
-    "/{product_id}/",
+    "/id/{product_id}/",
     response_model=ProductRead,
     status_code=status.HTTP_200_OK
 )

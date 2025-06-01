@@ -3,7 +3,6 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  # Python‑микросервисы — метрики по адресу /metrics
   - job_name: "fastapi-services"
     metrics_path: "/metrics"
     static_configs:
@@ -15,7 +14,6 @@ scrape_configs:
     static_configs:
       - targets: [ "review-analyser:8000" ]
 
-  # Kafka + Connect (JMX exporter)
   - job_name: "kafka"
     static_configs:
       - targets: ["kafka:7071", "kafka-connect:7071"]

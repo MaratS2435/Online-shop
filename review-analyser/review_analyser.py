@@ -44,11 +44,15 @@ os_client = AsyncOpenSearch(
 )
 
 async def save_enriched(doc: dict):
-    await os_client.update(
-        index="reviews",
-        id=doc["id"],
-        body={"doc": doc, "doc_as_upsert": True},
-    )
+    try:
+        await os_client.update(
+            index="reviews",
+            id=doc["id"],
+            body={"doc": doc, "doc_as_upsert": True},
+        )
+    except Exception as e:
+        log.exception("Failed to save to OpenSearch: %s", e)
+        FAILED.inc()
 
 async def run():
     consumer = AIOKafkaConsumer(
@@ -78,19 +82,13 @@ async def run():
                     return pred_label.lower()
 
                 def is_toxic(txt: str, thr: float = THRESHOLD) -> bool:
-                    """
-                    Возвращает True, если модель считает текст токсичным с вероятностью ≥ thr.
-                    Работает для моделей с метками 'toxic' / 'non-toxic' или LABEL_i.
-                    """
                     out = toxic_pipe(txt, return_all_scores=True)[0]  # список словарей
                     scores = {d["label"].lower(): d["score"] for d in out}
 
-                    # если метка 'toxic' есть явно — берём её score
                     if "toxic" in scores:
                         return scores["toxic"] >= thr
 
-                    # fallback на старый формат LABEL_…
-                    return scores.get("label_1", 0.0) >= thr  # зависит от конкретной модели
+                    return scores.get("label_1", 0.0) >= thr
 
                 sent_future = loop.run_in_executor(
                     None,
@@ -104,6 +102,7 @@ async def run():
 
             enriched = {
                 "id": data["id"],
+                "product_id": data["product_id"],
                 "sentiment": sent,
                 "toxic": toxic,
                 "analysed_at": datetime.now(timezone.utc).isoformat(),

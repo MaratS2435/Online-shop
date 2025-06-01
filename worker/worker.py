@@ -4,14 +4,12 @@ import json
 import boto3
 import psycopg2
 import logging
-from datetime import datetime
 from kafka import KafkaConsumer
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lit, length, current_timestamp
 from pyspark.sql.types import DecimalType, IntegerType, StringType
 from config import S3_CONFIG, POSTGRES_CONFIG
 
-# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
